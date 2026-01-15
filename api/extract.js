@@ -3,14 +3,6 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
     const { image, mediaType } = await req.json();
 
@@ -18,7 +10,6 @@ export default async function handler(req) {
       throw new Error('Server missing API Key');
     }
 
-    // Call Claude API with the CORRECT Model Name
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -27,7 +18,7 @@ export default async function handler(req) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307', // <--- FIXED: The real model name
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1024,
         messages: [
           {
@@ -43,44 +34,26 @@ export default async function handler(req) {
               },
               {
                 type: 'text',
-                text: `Extract all transactions from this banking screenshot. Return ONLY a JSON array with this exact format (no other text, no markdown):
-[{"date": "DD Month YYYY", "description": "Transaction name", "amount": "-123.45"}]
-
-Rules:
-- Use negative numbers for expenses (e.g., -100)
-- Use the exact date format shown
-- Keep description concise
-- Amount should include the minus sign and decimal
-- Return ONLY the JSON array, nothing else`,
-              },
-            ],
-          },
-        ],
+                text: `Extract transaction data into a JSON list.
+                For each transaction, extract:
+                - date (DD Month YYYY)
+                - description
+                - amount (number only, negative for money out)
+                
+                Return ONLY raw JSON.`
+              }
+            ]
+          }
+        ]
       }),
     });
 
     const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Claude API Error:", data);
-      return new Response(JSON.stringify({ error: data.error?.message || 'API error' }), {
-        status: response.status,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     return new Response(JSON.stringify(data), {
-      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
-    console.error("Server Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
