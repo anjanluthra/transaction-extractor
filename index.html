@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Extractor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Syne:wght@400;700;800&display=swap');
+        
+        :root {
+            --primary: #00ff88;
+            --dark: #0a0e1a;
+            --darker: #050810;
+            --accent: #ff0055;
+            --grey: #2a3142;
+            --light: #e8f5e9;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 85, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 90%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(10deg); }
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--primary);
+            margin-bottom: 3rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out 0.2s forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 0.7;
+            }
+        }
+        
+        .upload-zone {
+            background: var(--dark);
+            border: 2px dashed var(--grey);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, var(--primary), transparent);
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(0, 255, 136, 0.02);
+            transform: translateY(-2px);
+        }
+        
+        .upload-zone:hover::before {
+            width: 300px;
+            height: 300px;
+            opacity: 0.1;
+        }
+        
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(0, 255, 136, 0.05);
+            border-style: solid;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .upload-text {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--light);
+        }
+        
+        .upload-subtext {
+            font-size: 0.85rem;
+            color: var(--grey);
+            opacity: 0.8;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .preview-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        
+        .preview-area.active {
+            opacity: 1;
+            max-height: 500px;
+            margin-bottom: 2rem;
+        }
+        
+        .preview-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--dark);
+            border: 1px solid var(--grey);
+            animation: scaleIn 0.3s ease;
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
+        
+        .remove-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            background: #ff3366;
+        }
+        
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            padding: 1rem 2.5rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: var(--darker);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 255, 136, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .result-area {
+            background: var(--dark);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid var(--grey);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+        
+        .result-area.active {
+            max-height: 600px;
+            opacity: 1;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .copy-btn {
+            background: var(--grey);
+            color: var(--light);
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .copy-btn:hover {
+            background: var(--primary);
+            color: var(--darker);
+        }
+        
+        .csv-output {
+            background: var(--darker);
+            border: 1px solid var(--grey);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: var(--primary);
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .csv-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .csv-output::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        
+        .csv-output::-webkit-scrollbar-thumb {
+            background: var(--grey);
+            border-radius: 4px;
+        }
+        
+        .csv-output::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+        
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid var(--grey);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            background: var(--darker);
+            z-index: 10;
+        }
+        
+        .data-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary);
+            border-bottom: 2px solid var(--grey);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .data-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(42, 49, 66, 0.3);
+            color: var(--light);
+        }
+        
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        
+        .data-table tbody tr:hover {
+            background: rgba(0, 255, 136, 0.03);
+        }
+        
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: var(--grey);
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--primary);
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--grey);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--grey);
+            font-size: 0.8rem;
+            color: var(--grey);
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out 0.4s forwards;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .upload-zone {
+                padding: 2rem 1rem;
+            }
+            
+            .btn {
+                width: 100%;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Transaction Extractor</h1>
+        <p class="subtitle">Banking Screenshot → CSV in seconds</p>
+        
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">Drop screenshots here or click to upload</div>
+            <div class="upload-subtext">Supports PNG, JPG, JPEG</div>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg" multiple>
+        </div>
+        
+        <div class="preview-area" id="previewArea"></div>
+        
+        <button class="btn btn-primary" id="processBtn" disabled>
+            <span>Extract Transactions</span>
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Extracting transactions from images...</div>
+        </div>
+        
+        <div class="result-area" id="resultArea">
+            <div class="result-header">
+                <div class="result-title">Extracted Transactions</div>
+                <div>
+                    <button class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+                    <button class="copy-btn" id="pushBtn" style="margin-left: 10px; background: var(--accent);">Push to Google Sheets</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount (AED)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="csv-output" id="csvOutput" style="display: none;"></div>
+        </div>
+        
+        <div class="footer">
+            Built for quick transaction tracking • No data stored
+        </div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewArea = document.getElementById('previewArea');
+        const processBtn = document.getElementById('processBtn');
+        const loading = document.getElementById('loading');
+        const resultArea = document.getElementById('resultArea');
+        const csvOutput = document.getElementById('csvOutput');
+        const tableBody = document.getElementById('tableBody');
+        const copyBtn = document.getElementById('copyBtn');
+        const pushBtn = document.getElementById('pushBtn');
+        
+        let selectedFiles = [];
+        let extractedData = [];
+        
+        // **IMPORTANT**: Replace this with your Google Apps Script Web App URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKAZRf7Ybq9xpXEFgqbourt3I52InIJLAAM-EdhSBTciEtYTUCsHFmClctDm8jzSbU/exec';
+        
+        // Upload zone click
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        // File input change
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        function handleFiles(files) {
+            const imageFiles = Array.from(files).filter(file => 
+                file.type.startsWith('image/')
+            );
+            
+            selectedFiles = [...selectedFiles, ...imageFiles];
+            renderPreviews();
+            processBtn.disabled = selectedFiles.length === 0;
+        }
+        
+        function renderPreviews() {
+            previewArea.innerHTML = '';
+            
+            if (selectedFiles.length > 0) {
+                previewArea.classList.add('active');
+            } else {
+                previewArea.classList.remove('active');
+            }
+            
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview ${index + 1}">
+                        <button class="remove-btn" onclick="removeFile(${index})">×</button>
+                    `;
+                    previewArea.appendChild(previewItem);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            renderPreviews();
+            processBtn.disabled = selectedFiles.length === 0;
+        };
+        
+        processBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+            
+            loading.classList.add('active');
+            resultArea.classList.remove('active');
+            processBtn.disabled = true;
+            
+            // Simulate processing (in real implementation, you'd use OCR API)
+            await simulateProcessing();
+            
+            loading.classList.remove('active');
+            resultArea.classList.add('active');
+            processBtn.disabled = false;
+        });
+        
+        async function simulateProcessing() {
+            // Convert images to base64 and send to our backend API
+            const allTransactions = [];
+            
+            for (const file of selectedFiles) {
+                try {
+                    // Convert image to base64
+                    const base64Data = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                    
+                    // Determine media type
+                    const mediaType = file.type || 'image/jpeg';
+                    
+                    // Call our backend API (works locally and on Vercel)
+                    const response = await fetch('/api/extract', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            image: base64Data,
+                            mediaType: mediaType
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.content && data.content[0] && data.content[0].text) {
+                        let jsonText = data.content[0].text.trim();
+                        
+                        // Remove markdown code blocks if present
+                        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                        
+                        // Parse the transactions
+                        const transactions = JSON.parse(jsonText);
+                        allTransactions.push(...transactions);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error processing image:', file.name, error);
+                    throw error; // Re-throw to show user the error
+                }
+            }
+            
+            if (allTransactions.length === 0) {
+                throw new Error('No transactions found in the images. Please check your screenshots.');
+            }
+            
+            // Store extracted data
+            extractedData = allTransactions;
+            
+            // Create CSV for display
+            const csvLines = ['Date,Description,Amount (AED)'];
+            allTransactions.forEach(t => {
+                csvLines.push(`${t.date},${t.description},${t.amount}`);
+            });
+            csvOutput.textContent = csvLines.join('\n');
+            
+            // Render table
+            renderTable(extractedData);
+        }
+        
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            
+            data.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.style.animationDelay = `${index * 0.05}s`;
+                tr.innerHTML = `
+                    <td>${row.date}</td>
+                    <td>${row.description}</td>
+                    <td>${row.amount}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+        
+        copyBtn.addEventListener('click', () => {
+            const text = csvOutput.textContent;
+            // Convert CSV to TSV (tab-separated) for proper Google Sheets pasting
+            const tsvText = text.split('\n').map(line => {
+                return line.split(',').join('\t');
+            }).join('\n');
+            
+            navigator.clipboard.writeText(tsvText).then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                copyBtn.style.background = 'var(--primary)';
+                copyBtn.style.color = 'var(--darker)';
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '';
+                    copyBtn.style.color = '';
+                }, 2000);
+            });
+        });
+        
+        pushBtn.addEventListener('click', async () => {
+            if (extractedData.length === 0) {
+                alert('No data to push!');
+                return;
+            }
+            
+            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                alert('Please configure your Google Apps Script URL first!\n\nSee setup-instructions.md for details.');
+                return;
+            }
+            
+            const originalText = pushBtn.textContent;
+            pushBtn.textContent = 'Pushing...';
+            pushBtn.disabled = true;
+            
+            try {
+                // Send POST request with no-cors mode
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: extractedData })
+                });
+                
+                // no-cors means we can't read the response, but the data is sent
+                pushBtn.textContent = '✓ Pushed!';
+                pushBtn.style.background = 'var(--primary)';
+                pushBtn.style.color = 'var(--darker)';
+                console.log('Data sent to Google Sheets! Check your sheet to confirm.');
+                
+                setTimeout(() => {
+                    pushBtn.textContent = originalText;
+                    pushBtn.style.background = '';
+                    pushBtn.style.color = '';
+                    pushBtn.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error pushing to Google Sheets:', error);
+                pushBtn.textContent = '✗ Error';
+                pushBtn.style.background = 'var(--accent)';
+                
+                setTimeout(() => {
+                    pushBtn.textContent = originalText;
+                    pushBtn.style.background = '';
+                    pushBtn.disabled = false;
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
