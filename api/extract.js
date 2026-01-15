@@ -27,7 +27,7 @@ export default async function handler(req) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022', // <--- FIXED: The real model name
+        model: 'claude-3-5-sonnet-20240620', // <--- FIXED: The real model name
         max_tokens: 1024,
         messages: [
           {
