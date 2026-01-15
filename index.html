@@ -732,16 +732,24 @@
             });
         }
         
-        copyBtn.addEventListener('click', () => {
-            const text = csvOutput.textContent;
-            // Convert CSV to TSV (tab-separated) for proper Google Sheets pasting
-            const tsvText = text.split('\n').map(line => {
-                return line.split(',').join('\t');
-            }).join('\n');
+       copyBtn.addEventListener('click', () => {
+            // SMART COPY: Use the raw data, don't just replace commas!
+            // Header
+            let tsvText = 'Date\tDescription\tAmount\n';
+            
+            // Rows
+            extractedData.forEach(row => {
+                // Remove any tabs or newlines from the data to prevent breaking
+                const safeDate = row.date.replace(/[\t\n]/g, ' ');
+                const safeDesc = row.description.replace(/[\t\n]/g, ' ');
+                const safeAmount = row.amount.replace(/[\t\n]/g, ' ');
+                
+                tsvText += `${safeDate}\t${safeDesc}\t${safeAmount}\n`;
+            });
             
             navigator.clipboard.writeText(tsvText).then(() => {
                 const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
+                copyBtn.textContent = '✓ Copied!';
                 copyBtn.style.background = 'var(--primary)';
                 copyBtn.style.color = 'var(--darker)';
                 
