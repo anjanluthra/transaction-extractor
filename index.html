@@ -2,25 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FLOW | Finance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>FLOW | Financial Intelligence</title>
+    <meta name="description" content="Automated financial tracking and intelligence dashboard.">
+    <meta name="theme-color" content="#050507">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23050507'/><path d='M30 20 L80 20 L80 35 L50 35 L50 45 L75 45 L75 60 L50 60 L50 80 L30 80 Z' fill='%2300f2ea'/></svg>">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
         :root {
             --primary: #00f2ea;
-            --primary-dim: rgba(0, 242, 234, 0.1);
-            --accent: #ff0055;
+            --primary-glow: rgba(0, 242, 234, 0.4);
             --bg: #050507;
-            --card: #111116;
+            --surface: #0f0f13;
+            --surface-hover: #16161c;
             --border: #22222b;
             --text: #ffffff;
             --text-dim: #8888aa;
             --success: #00ff9d;
-            --success-bg: rgba(0, 255, 157, 0.1);
+            --warning: #ffd000;
+            --danger: #ff0055;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg);
@@ -30,385 +37,383 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 4rem 2rem;
-            background-image: radial-gradient(circle at 50% 0%, #1a1a2e 0%, var(--bg) 60%);
+            padding: 2rem 1rem;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 242, 234, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, var(--bg) 0%, #000 100%);
         }
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 600px;
             display: flex;
             flex-direction: column;
-            gap: 2.5rem;
-        }
-
-        /* HEADER */
-        .header { text-align: center; margin-bottom: 1rem; }
-        h1 {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 3.5rem;
-            letter-spacing: -2px;
-            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
-        .subtitle {
-            color: var(--text-dim);
-            font-size: 0.9rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        /* UPLOAD ZONE */
-        .upload-zone {
-            background: var(--card);
-            border: 2px dashed var(--border);
-            border-radius: 16px;
-            padding: 4rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 1.5rem;
             position: relative;
-            overflow: hidden;
         }
 
-        .upload-zone:hover, .upload-zone.active {
-            border-color: var(--primary);
-            background: var(--primary-dim);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px -10px rgba(0, 242, 234, 0.2);
-        }
-
-        .zone-text { color: var(--text-dim); margin-top: 1rem; font-weight: 300; }
-        .zone-icon { font-size: 2.5rem; color: var(--primary); filter: drop-shadow(0 0 10px var(--primary)); }
-
-        /* BUTTONS */
-        .btn {
-            background: var(--text);
-            color: var(--bg);
-            border: none;
-            padding: 1rem 3rem;
-            border-radius: 100px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0 auto;
-            display: block;
-        }
-
-        .btn:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        }
-
-        .btn:disabled {
-            background: var(--border);
-            color: var(--text-dim);
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        /* RESULTS TABLE */
-        .results-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
-            display: none; /* Hidden initially */
-            box-shadow: 0 20px 50px -20px rgba(0,0,0,0.5);
-        }
-
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .action-group { display: flex; gap: 0.75rem; }
-
-        .btn-sm {
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
+        /* --- BRANDING --- */
+        .brand { text-align: center; margin-bottom: 1rem; display: flex; flex-direction: column; align-items: center; }
+        
+        .logo-svg {
+            width: 50px; height: 50px; margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
         }
         
-        .btn-copy { background: #222; color: #fff; border: 1px solid #333; }
-        .btn-copy:hover { border-color: #666; }
-        
-        .btn-push { 
-            background: linear-gradient(45deg, var(--accent), #ff5500);
-            color: white; 
-            box-shadow: 0 4px 15px rgba(255, 0, 85, 0.3);
+        .brand h1 {
+            font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; letter-spacing: -2px;
+            color: white; margin-bottom: 0.2rem;
         }
-        .btn-push:hover { box-shadow: 0 4px 25px rgba(255, 0, 85, 0.5); transform: translateY(-1px); }
+        .brand p { color: var(--text-dim); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        /* --- NAV --- */
+        .nav-pill {
+            display: flex; background: var(--surface); padding: 0.3rem; border-radius: 100px;
+            border: 1px solid var(--border); margin-bottom: 1rem;
+        }
+        .nav-item {
+            flex: 1; text-align: center; padding: 0.8rem; border-radius: 100px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; color: var(--text-dim); transition: 0.3s;
+        }
+        .nav-item.active { color: var(--bg); background: var(--primary); box-shadow: 0 4px 15px var(--primary-glow); }
+
+        /* --- SECTIONS --- */
+        .section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- CAPTURE UI --- */
+        .upload-card {
+            background: var(--surface); border: 2px dashed var(--border); border-radius: 20px;
+            padding: 3rem 1.5rem; text-align: center; cursor: pointer; transition: 0.2s;
+        }
+        .upload-card:hover, .upload-card.dragover { border-color: var(--primary); background: var(--surface-hover); }
+        .upload-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+        .upload-text { color: var(--text-dim); font-size: 0.9rem; }
         
-        th {
-            text-align: left;
-            color: var(--text-dim);
-            font-weight: 400;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            text-transform: uppercase;
+        .table-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+            padding: 1rem; margin-top: 1.5rem; display: none;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; color: var(--text-dim); padding: 0.8rem; font-family: 'JetBrains Mono'; font-size: 0.7rem; text-transform: uppercase; }
+        td { padding: 0.8rem; border-top: 1px solid var(--border); }
+        .usd-col { color: var(--primary); font-family: 'JetBrains Mono'; }
+        tr.synced td { color: var(--success); border-top-color: rgba(0, 255, 157, 0.2); }
+
+        /* --- PULSE UI --- */
+        .pulse-card {
+            background: linear-gradient(145deg, var(--surface), #0a0a0d); border: 1px solid var(--border);
+            border-radius: 24px; padding: 2rem; position: relative; overflow: hidden;
+        }
+        .pulse-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        
+        .month-badge { 
+            background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 8px; 
+            font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px;
         }
 
-        td {
-            padding: 1.25rem 1rem;
-            border-bottom: 1px solid var(--border);
-            color: var(--text);
-        }
+        .big-stat { font-size: 3rem; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 0.5rem; line-height: 1; }
+        .stat-label { color: var(--text-dim); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        tr:last-child td { border-bottom: none; }
+        .progress-container { height: 10px; background: #222; border-radius: 10px; margin: 1rem 0 0.5rem 0; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 10px; transition: width 1s ease; }
+        .progress-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-dim); font-family: 'JetBrains Mono'; }
+
+        .year-section { margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; }
+        .year-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; font-weight: 600; letter-spacing: 1px; }
+        .year-progress-container { height: 4px; background: #222; border-radius: 4px; overflow: hidden; }
+        .year-progress-bar { height: 100%; border-radius: 4px; transition: width 1s ease; background: #555; }
+        .year-meta { margin-top: 0.5rem; font-size: 0.8rem; color: var(--text); font-family: 'JetBrains Mono'; display: flex; justify-content: space-between; }
+
+        .breakdown-list { margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+        .breakdown-title { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .cat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; font-size: 0.95rem; }
+        .cat-name { display: flex; align-items: center; gap: 10px; color: var(--text); }
+        .cat-val { font-family: 'JetBrains Mono'; font-weight: 600; color: var(--text); }
+        .dot { width: 8px; height: 8px; background: var(--border); border-radius: 50%; }
+
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+        .mini-card { background: rgba(255,255,255,0.03); border-radius: 16px; padding: 1.2rem; }
+        .mini-val { font-size: 1.2rem; font-weight: 700; font-family: 'JetBrains Mono'; margin-top: 0.3rem; }
         
-        /* Currency Column */
-        td.usd-col { font-family: 'JetBrains Mono', monospace; color: var(--primary); }
-        
-        /* SYNCED STATE ANIMATION */
-        tr.synced {
-            background-color: rgba(0, 255, 157, 0.05);
-            transition: background-color 0.5s ease;
+        .btn-main {
+            background: var(--text); color: var(--bg); border: none; padding: 1rem; width: 100%;
+            border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 1rem;
+            transition: 0.2s; font-family: 'JetBrains Mono'; text-transform: uppercase;
         }
-        tr.synced td {
-            color: var(--success);
-            border-bottom-color: var(--success-bg);
-        }
-        tr.synced td.usd-col { color: var(--success); }
+        .btn-main:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
         
-        /* Loading */
+        .btn-whatsapp {
+            background: #25D366; color: white; border: none; padding: 1rem; width: 100%;
+            border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 1.5rem;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+        }
+        .btn-whatsapp:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); }
+
         .loader {
-            width: 100%;
-            height: 4px;
-            background: var(--border);
-            position: relative;
-            overflow: hidden;
-            border-radius: 4px;
-            display: none;
-            margin-top: 2rem;
+            width: 100%; height: 4px; background: var(--border); overflow: hidden; display: none; border-radius: 2px; margin-top: 1rem;
         }
         .loader::after {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; height: 100%; width: 40%;
-            background: var(--primary);
-            animation: load 1s infinite linear;
+            content: ''; display: block; width: 40%; height: 100%; background: var(--primary); animation: slide 1s infinite linear;
         }
-        @keyframes load { 0% { left: -40%; } 100% { left: 140%; } }
-
+        @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="header">
+        <div class="brand">
+            <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" rx="20" fill="#111116"/>
+                <path d="M35 30H75M35 50H65M35 70V30" stroke="#00f2ea" stroke-width="8" stroke-linecap="round"/>
+            </svg>
             <h1>FLOW</h1>
-            <p class="subtitle">Automated Financial Intelligence</p>
+            <p>Financial Intelligence</p>
         </div>
 
-        <div class="upload-zone" id="uploadZone">
-            <div class="zone-icon">+</div>
-            <p class="zone-text">Drop receipt screenshots here</p>
-            <input type="file" id="fileInput" multiple accept="image/*" style="display: none">
+        <div class="nav-pill">
+            <div class="nav-item active" onclick="switchTab('capture')">CAPTURE</div>
+            <div class="nav-item" onclick="switchTab('pulse')">PULSE</div>
         </div>
 
-        <div class="loader" id="loader"></div>
-        <button class="btn" id="extractBtn" disabled>Process Images</button>
+        <div id="capture" class="section active">
+            <div class="upload-card" id="uploadZone">
+                <span class="upload-icon">📸</span>
+                <p class="upload-text">Drop bank screenshots here</p>
+                <input type="file" id="fileInput" multiple accept="image/*" style="display: none">
+            </div>
 
-        <div class="results-card" id="resultsArea">
-            <div class="toolbar">
-                <div style="font-weight: 600; color: var(--text-dim)">TRANSACTIONS</div>
-                <div class="action-group">
-                    <button class="btn-sm btn-copy" id="copyBtn">Copy Data</button>
-                    <button class="btn-sm btn-push" id="pushBtn">Push to Sheets</button>
+            <div class="loader" id="loader"></div>
+            <button class="btn-main" id="extractBtn" disabled>Process Images</button>
+
+            <div class="table-card" id="resultsArea">
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:var(--text-dim); font-size:0.8rem; font-weight:600;">
+                    <span>NEW TRANSACTIONS</span>
+                    <span id="rowCount">0 items</span>
+                </div>
+                <table>
+                    <thead><tr><th>Desc</th><th>AED</th><th>USD</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+                <button class="btn-main" id="pushBtn" style="background:var(--primary); color:black; margin-top:1.5rem;">Sync to Sheets</button>
+            </div>
+        </div>
+
+        <div id="pulse" class="section">
+            <div id="pulseLoading" style="text-align:center; padding:3rem; color:var(--text-dim);">
+                Fetching live data... 📡
+            </div>
+            
+            <div id="pulseContent" style="display:none;">
+                <div class="pulse-card">
+                    <div class="pulse-header">
+                        <div class="month-badge">📅 <span id="pulseMonthName">Month</span></div>
+                        <div id="pulseStatus" style="font-size:1.5rem"></div>
+                    </div>
+
+                    <div class="stat-label">TOTAL SPENT</div>
+                    <div class="big-stat" id="pulseSpent">$0</div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar" id="pulseBar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-meta">
+                        <span id="pulsePercent">0% Used</span>
+                        <span id="pulseBudget">Budget: $0</span>
+                    </div>
+
+                    <div class="year-section">
+                        <div class="year-header"><span>2026 PROGRESS</span></div>
+                        <div class="year-progress-container">
+                            <div class="year-progress-bar" id="yearBar" style="width:0%"></div>
+                        </div>
+                        <div class="year-meta">
+                            <span id="yearSpent">$0</span>
+                            <span id="yearBudget"> / $0</span>
+                        </div>
+                    </div>
+
+                    <div class="breakdown-list" id="categoryList"></div>
+
+                    <div class="grid-stats">
+                        <div class="mini-card">
+                            <div class="stat-label" style="font-size:0.7rem">REMAINING</div>
+                            <div class="mini-val" id="pulseRemaining" style="color:var(--success)">$0</div>
+                        </div>
+                        <div class="mini-card">
+                            <div class="stat-label" style="font-size:0.7rem">DAILY AVG</div>
+                            <div class="mini-val" id="pulseDaily">$0</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-whatsapp" id="whatsappBtn">
+                        <span>Share Family Brief</span>
+                    </button>
                 </div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>AED</th>
-                        <th>USD</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKAZRf7Ybq9xpXEFgqbourt3I52InIJLAAM-EdhSBTciEtYTUCsHFmClctDm8jzSbU/exec'; 
-        // ---------------------
 
-        const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
-        const extractBtn = document.getElementById('extractBtn');
-        const resultsArea = document.getElementById('resultsArea');
-        const tableBody = document.getElementById('tableBody');
-        const copyBtn = document.getElementById('copyBtn');
-        const pushBtn = document.getElementById('pushBtn');
-        const loader = document.getElementById('loader');
-        
-        let selectedFiles = [];
-        let extractedData = [];
+        // GLOBALS
+        let appStats = null;
 
-        // Drag & Drop Visuals
-        uploadZone.addEventListener('click', () => fileInput.click());
-        uploadZone.addEventListener('dragover', (e) => { 
-            e.preventDefault(); 
-            uploadZone.classList.add('active'); 
-        });
-        uploadZone.addEventListener('dragleave', () => { 
-            uploadZone.classList.remove('active'); 
-        });
-        uploadZone.addEventListener('drop', (e) => { 
-            e.preventDefault(); 
-            uploadZone.classList.remove('active'); 
-            handleFiles(e.dataTransfer.files); 
-        });
-        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-
-        function handleFiles(files) {
-            Array.from(files).forEach(f => selectedFiles.push(f));
-            updateUI();
-        }
-
-        function updateUI() {
-            extractBtn.disabled = selectedFiles.length === 0;
-            if (selectedFiles.length > 0) {
-                document.querySelector('.zone-text').textContent = `${selectedFiles.length} images ready`;
-                document.querySelector('.zone-icon').textContent = '📸';
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            if(tab === 'capture') {
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                document.getElementById('capture').classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                document.getElementById('pulse').classList.add('active');
+                if(!appStats) fetchPulseData(); 
             }
         }
 
-        // EXTRACTION LOGIC
-        extractBtn.addEventListener('click', async () => {
-            loader.style.display = 'block';
-            extractBtn.style.display = 'none';
-            
-            // Get Exchange Rate
-            let rate = 0.272;
-            try { 
-                const r = await fetch('https://open.er-api.com/v6/latest/AED'); 
-                const d = await r.json(); 
-                rate = d.rates.USD; 
-            } catch(e){}
+        // CAPTURE LOGIC
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const extractBtn = document.getElementById('extractBtn');
+        let selectedFiles = [], extractedData = [];
 
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+        uploadZone.addEventListener('drop', (e) => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files);
+            if(selectedFiles.length > 0) {
+                document.querySelector('.upload-text').textContent = `${selectedFiles.length} screenshots ready`;
+                extractBtn.disabled = false; extractBtn.style.background = 'var(--text)';
+            }
+        }
+
+        extractBtn.addEventListener('click', async () => {
+            document.getElementById('loader').style.display = 'block'; extractBtn.disabled = true;
+            let rate = 0.272;
+            try { const r = await fetch('https://open.er-api.com/v6/latest/AED'); const d = await r.json(); rate = d.rates.USD; } catch(e){}
             const allTrans = [];
             for (const file of selectedFiles) {
                 try {
-                    const base64 = await new Promise(r => { 
-                        const reader = new FileReader(); 
-                        reader.onload = () => r(reader.result.split(',')[1]); 
-                        reader.readAsDataURL(file); 
-                    });
-
-                    const res = await fetch('/api/extract', { 
-                        method: 'POST', 
-                        body: JSON.stringify({ image: base64, mediaType: file.type }) 
-                    });
+                    const base64 = await new Promise(r => { const reader = new FileReader(); reader.onload = () => r(reader.result.split(',')[1]); reader.readAsDataURL(file); });
+                    const res = await fetch('/api/extract', { method: 'POST', body: JSON.stringify({ image: base64, mediaType: file.type }) });
                     const data = await res.json();
-                    
                     if (data.content && data.content[0].text) {
                         const jsonText = data.content[0].text.replace(/```json|```/g, '').trim();
                         JSON.parse(jsonText).forEach(t => {
                             const aed = parseFloat(t.amount.toString().replace(/,/g, ''));
-                            allTrans.push({
-                                date: t.date,
-                                description: t.description,
-                                amount: aed,
-                                amountUSD: (aed * rate).toFixed(2)
-                            });
+                            allTrans.push({ date: t.date, description: t.description, amount: aed, amountUSD: (aed * rate).toFixed(2) });
                         });
                     }
                 } catch (e) { console.error(e); }
             }
-
             extractedData = allTrans;
-            renderTable();
-            
-            loader.style.display = 'none';
-            resultsArea.style.display = 'block';
-            extractBtn.style.display = 'block';
-            extractBtn.textContent = "Process More";
-            selectedFiles = []; // Reset for next batch
-            document.querySelector('.zone-text').textContent = "Drop receipt screenshots here";
+            document.getElementById('rowCount').textContent = `${extractedData.length} items`;
+            document.getElementById('tableBody').innerHTML = extractedData.map(row => `<tr><td style="color:white; font-weight:600">${row.description}</td><td>${row.amount}</td><td class="usd-col">${row.amountUSD}</td></tr>`).join('');
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('resultsArea').style.display = 'block';
+            extractBtn.style.display = 'none';
         });
 
-        function renderTable() {
-            tableBody.innerHTML = extractedData.map(row => `
-                <tr>
-                    <td>${row.date}</td>
-                    <td>${row.description}</td>
-                    <td>${row.amount}</td>
-                    <td class="usd-col">${row.amountUSD}</td>
-                </tr>
-            `).join('');
-        }
-
-        // PUSH LOGIC with VISUAL FEEDBACK
-        pushBtn.addEventListener('click', async () => {
-            const originalText = pushBtn.textContent;
-            pushBtn.textContent = "Syncing...";
-            pushBtn.disabled = true;
-
+        document.getElementById('pushBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('pushBtn');
+            btn.textContent = "Syncing...";
             try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: extractedData })
-                });
-
-                // --- VISUAL SUCCESS STATE ---
-                // 1. Change Button
-                pushBtn.textContent = "✓ Synced";
-                pushBtn.style.background = "var(--success)";
-                pushBtn.style.color = "var(--bg)";
-                pushBtn.style.boxShadow = "none";
-
-                // 2. Change Table Rows (Green Highlight)
-                const rows = tableBody.querySelectorAll('tr');
-                rows.forEach(row => {
-                    row.classList.add('synced');
-                });
+                // IMPORTANT: 'no-cors' means we can't see the response, but the request IS sent.
+                await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: extractedData }) });
                 
-                // Reset button after 3s
+                // Assuming success if no network error thrown
+                btn.textContent = "✓ Synced Successfully"; btn.style.background = "var(--success)";
+                document.querySelectorAll('tr').forEach(r => r.classList.add('synced'));
                 setTimeout(() => {
-                    pushBtn.textContent = originalText;
-                    pushBtn.style.background = ""; // reverts to CSS
-                    pushBtn.style.color = "";
-                    pushBtn.disabled = false;
-                }, 3000);
-
+                    selectedFiles = []; extractedData = [];
+                    document.getElementById('resultsArea').style.display = 'none';
+                    document.querySelector('.upload-text').textContent = "Drop bank screenshots here";
+                    extractBtn.style.display = 'block'; extractBtn.disabled = true; extractBtn.textContent = "Process Images"; extractBtn.style.background = "";
+                }, 2500);
             } catch (e) { 
-                alert("Error pushing to sheet"); 
-                pushBtn.textContent = "Error"; 
-                pushBtn.disabled = false;
+                btn.textContent = "Error Syncing"; 
+                btn.style.background = "var(--danger)";
+                console.error(e);
             }
         });
 
-        copyBtn.addEventListener('click', () => {
-            let tsv = 'Date\tDescription\tAED\tUSD\n';
-            extractedData.forEach(r => tsv += `${r.date}\t${r.description}\t${r.amount}\t${r.amountUSD}\n`);
-            navigator.clipboard.writeText(tsv);
-            copyBtn.textContent = "Copied";
-            setTimeout(() => copyBtn.textContent = "Copy Data", 2000);
-        });
+        // PULSE LOGIC
+        async function fetchPulseData() {
+            const loading = document.getElementById('pulseLoading');
+            const content = document.getElementById('pulseContent');
+            loading.style.display = 'block'; content.style.display = 'none';
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                appStats = await response.json(); // Store globally
+                renderPulse();
+                loading.style.display = 'none'; content.style.display = 'block';
+            } catch (e) { loading.textContent = "Error loading data."; }
+        }
+
+        function renderPulse() {
+            if(!appStats) return;
+            const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits:0 }).format(n);
+            
+            // Use MONTH stats for the big card
+            const activeData = appStats.month;
+            const percent = activeData.budget > 0 ? (activeData.spent / activeData.budget) * 100 : 0;
+            
+            // Colors
+            let color = "var(--success)"; let statusIcon = "✅";
+            if(percent > 80) { color = "var(--warning)"; statusIcon = "👀"; }
+            if(percent > 100) { color = "var(--danger)"; statusIcon = "⚠️"; }
+
+            // Render Big Stats
+            document.getElementById('pulseMonthName').textContent = appStats.month.name; // e.g. "January"
+            document.getElementById('pulseStatus').textContent = statusIcon;
+            document.getElementById('pulseSpent').textContent = fmt(activeData.spent);
+            document.getElementById('pulseBudget').textContent = `Budget: ${fmt(activeData.budget)}`;
+            document.getElementById('pulsePercent').textContent = `${Math.round(percent)}% Used`;
+            
+            const bar = document.getElementById('pulseBar');
+            bar.style.width = `${Math.min(percent, 100)}%`; bar.style.backgroundColor = color;
+
+            // Render Year-to-Date Mini Bar
+            const yPercent = appStats.year.budget > 0 ? (appStats.year.spent / appStats.year.budget) * 100 : 0;
+            document.getElementById('yearBar').style.width = `${Math.min(yPercent, 100)}%`;
+            document.getElementById('yearBar').style.backgroundColor = yPercent > 100 ? "var(--danger)" : (yPercent > 90 ? "var(--warning)" : "var(--success)");
+            document.getElementById('yearSpent').textContent = fmt(appStats.year.spent);
+            document.getElementById('yearBudget').textContent = ` / ${fmt(appStats.year.budget)} (${Math.round(yPercent)}%)`;
+
+            // Remaining & Daily
+            document.getElementById('pulseRemaining').textContent = fmt(activeData.remaining);
+            const day = new Date().getDate();
+            const dailyVal = activeData.spent / day;
+            document.getElementById('pulseDaily').textContent = fmt(dailyVal);
+
+            // Categories
+            const catList = document.getElementById('categoryList');
+            if (appStats.breakdown && appStats.breakdown.length > 0) {
+                catList.innerHTML = `<div class="breakdown-title">TOP SPENDING (${appStats.month.name.toUpperCase()})</div>` + 
+                appStats.breakdown.map(cat => `
+                    <div class="cat-row">
+                        <div class="cat-name"><div class="dot" style="background:${color}"></div>${cat.name}</div>
+                        <div class="cat-val">${fmt(cat.value)}</div>
+                    </div>
+                `).join('');
+            } else {
+                catList.innerHTML = `<div class="breakdown-title" style="text-align:center">No categories yet</div>`;
+            }
+
+            // WhatsApp Share
+            const msg = `📅 ${appStats.month.name} Family Brief\n\n${statusIcon} Status: ${percent > 100 ? "Over Budget" : "On Track"}\n🎯 Budget: ${fmt(appStats.month.budget)}\n💸 Spent: ${fmt(appStats.month.spent)} (${Math.round(percent)}%)\n💰 Remaining: ${fmt(appStats.month.remaining)}\n\n📅 2026 Progress: ${fmt(appStats.year.spent)} / ${fmt(appStats.year.budget)}\n\nLove you ❤️`;
+            const waBtn = document.getElementById('whatsappBtn');
+            waBtn.onclick = () => { navigator.clipboard.writeText(msg); waBtn.innerHTML = "<span>✓ Copied! Open WhatsApp</span>"; setTimeout(() => waBtn.innerHTML = "<span>Share Family Brief</span>", 3000); };
+        }
     </script>
 </body>
 </html>
